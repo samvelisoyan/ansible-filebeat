@@ -1,0 +1,19 @@
+---
+
+- include: setup.yml
+  when:
+    - ansible_user_id == "root"
+    - not filebeat_disable_install
+
+- include: config.yml
+  when:
+    - filebeat_create_config | bool
+
+- name: Ensure Filebeat is started and enabled at boot.
+  service:
+    name: filebeat
+    state: started
+    enabled: "{{ filebeat_enabled_on_boot }}"
+  when:
+    - ansible_user_id == "root"
+    - not filebeat_disable_install

@@ -1,0 +1,15 @@
+---
+
+- name: restart filebeat
+  become: yes
+  service: name=filebeat state=restarted
+  when:
+    - ansible_user_id == "root"
+
+- name: stop and disable on boot filebeat
+  service:
+    name: filebeat
+    state: stopped
+    enabled: false
+  when:
+    - ansible_user_id == "root"

@@ -1,0 +1,59 @@
+---
+
+- name: Get proxies settings from environment variables
+  set_fact:
+    filebeat_https_proxy: "{{ lookup('env', 'https_proxy') | default(filebeat_https_proxy, True) }}"
+    filebeat_http_proxy:  "{{ lookup('env', 'http_proxy')  | default(filebeat_http_proxy, True) }}"
+
+- name: Disabling proxies from filebeat data
+  set_fact:
+    logstash_https_proxy: ""
+    logstash_http_proxy:  ""
+  when: filebeat_disable_http_proxies
+
+- name: Display proxies settings to use
+  debug:
+    msg: "https_proxy={{ filebeat_https_proxy }}, http_proxy={{ filebeat_http_proxy }}"
+
+- name: "Check if use systemd"
+  set_fact: use_system_d={{ ansible_service_mgr == 'systemd' }}
+
+- name: Set systemd user service script
+  set_fact:
+    sysd_script: "{{ sysd_user_services_folder }}/filebeat.service"
+
+- name: Add Elasticsearch GPG key
+  rpm_key:
+    key: https://packages.elastic.co/GPG-KEY-elasticsearch
+    state: present
+  environment:
+    - https_proxy: "{{ filebeat_https_proxy }}"
+    - http_proxy: "{{ filebeat_http_proxy }}"
+
+- name: Add beats repository
+  template:
+    src: beats.repo.j2
+    dest: /etc/yum.repos.d/beats.repo
+    mode: 0644
+
+- name: Install Filebeat
+  action: >
+    {{ ansible_pkg_mgr }}
+    name='filebeat'
+    state=present
+    enablerepo={{ filebeat_enablerepo | default(omit,true) }}
+  when: not ansible_check_mode
+
+- name: User variable must be defined in Service section systemd file
+  lineinfile:
+    path: "{{ sysd_script }}"
+    regexp: '^User=root'
+    insertafter: '\[Service\]'
+    line: 'User=root'
+
+- name: Group variable must be defined in Service section systemd file
+  lineinfile:
+    path: "{{ sysd_script }}"
+    regexp: '^Group=root'
+    insertafter: 'User=root'
+    line: 'Group=root'

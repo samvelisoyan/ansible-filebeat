@@ -1,0 +1,1 @@
+sysd_user_services_folder: "{{ '/usr/lib/systemd/system' if (ansible_distribution in ['RedHat','CentOS']) else '/lib/systemd/system/' }}"

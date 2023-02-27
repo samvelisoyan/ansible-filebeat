@@ -1,0 +1,16 @@
+---
+
+galaxy_info:
+  role_name: filebeat
+  author: Samvel Isoyan
+  description: Install Filebeat and deploy configuration files
+  license: "Apache License"
+  min_ansible_version: 2.4
+  platforms:
+    - name: Redhat
+      versions:
+        - 7
+        - 8
+  galaxy_tags:
+    - filebeat
+dependencies: []
